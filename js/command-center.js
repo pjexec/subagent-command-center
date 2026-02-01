@@ -277,18 +277,16 @@ class CommandCenter {
         };
 
         await this.apiCall('/tasks', 'POST', taskData);
+        await this.logActivity(taskData.assignee, 'New Mission Assigned', taskData.title);
         await this.loadData(); // Reload to get ID and consistent state
         this.closeAllModals();
     }
 
     async createActivity(formData) {
-        const activityData = {
-            agent_id: formData.get('agent'),
-            action: 'Report',
-            details: formData.get('description')
-        };
+        const agentId = formData.get('agent');
+        const desc = formData.get('description');
 
-        await this.apiCall('/activity', 'POST', activityData);
+        await this.logActivity(agentId, 'Report', desc);
         await this.loadData();
         this.closeAllModals();
     }
@@ -301,7 +299,7 @@ class CommandCenter {
             assignee: formData.get('assignee'),
             priority: formData.get('priority'),
             due_date: formData.get('dueDate'),
-            status: 'backlog' // Default, status update is separate usually, but let's keep it safe
+            status: 'backlog'
         };
 
         // Find existing status to preserve it
@@ -309,6 +307,7 @@ class CommandCenter {
         if (existing) taskData.status = existing.status;
 
         await this.apiCall(`/tasks/${taskId}`, 'PUT', taskData);
+        await this.logActivity('chuck', 'Updated Mission', taskData.title);
         await this.loadData();
         this.closeAllModals();
     }
@@ -326,14 +325,10 @@ class CommandCenter {
 
         if (taskId) {
             const existing = this.tasks.find(t => t.id == taskId);
-            // Log deletion before deleting if needed, or backend handles it? 
+            // Log deletion before deleting if needed, or backend handles it?
             // We'll log manually via API for now
             if (existing) {
-                await this.apiCall('/activity', 'POST', {
-                    agent_id: this.username || 'user',
-                    action: 'Terminated Mission',
-                    details: existing.title
-                });
+                await this.logActivity(this.username || 'user', 'Terminated Mission', existing.title);
             }
 
             await this.apiCall(`/tasks/${taskId}`, 'DELETE');
@@ -349,14 +344,18 @@ class CommandCenter {
             await this.apiCall(`/tasks/${taskId}`, 'PUT', { ...task, due_date: task.due_date });
 
             // Log move
-            await this.apiCall('/activity', 'POST', {
-                agent_id: this.username || 'user',
-                action: `Moved mission to ${newStatus}`,
-                details: task.title
-            });
+            await this.logActivity(task.assignee, `Moved mission to ${newStatus}`, task.title);
 
             await this.loadData();
         }
+    }
+
+    async logActivity(agentId, action, details = null) {
+        await this.apiCall('/activity', 'POST', {
+            agent_id: agentId,
+            action,
+            details
+        });
     }
 
     getAgent(id) {
