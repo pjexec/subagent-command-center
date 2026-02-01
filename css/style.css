@@ -250,7 +250,8 @@ body {
 /* Main Board */
 .main {
     flex: 1;
-    padding: 32px 40px;
+    padding: 16px 40px;
+    /* Reduced top padding to bring it up */
     overflow-x: auto;
     background: var(--bg-dark);
     width: 100vw;
@@ -259,7 +260,10 @@ body {
 }
 
 .header {
-    margin-bottom: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .kanban-board {
