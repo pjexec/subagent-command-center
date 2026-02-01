@@ -66,6 +66,14 @@ class CommandCenter {
             });
         }
 
+        const editTaskForm = document.getElementById('edit-task-form');
+        if (editTaskForm) {
+            editTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.updateTask(new FormData(editTaskForm));
+            });
+        }
+
         const activityForm = document.getElementById('activity-form');
         if (activityForm) {
             activityForm.addEventListener('submit', (e) => {
@@ -172,7 +180,9 @@ class CommandCenter {
         const priorityColor = task.priority === 'urgent' || task.priority === 'high' ? 'priority-high' :
             task.priority === 'medium' ? 'priority-medium' : 'priority-low';
 
-        const assigneeName = this.getAgentName(task.assignee);
+        const agent = this.getAgent(task.assignee);
+        const avatarUrl = agent ? agent.avatar : '';
+        const agentName = agent ? agent.name : task.assignee;
 
         el.innerHTML = `
             <div class="task-title">
@@ -181,7 +191,10 @@ class CommandCenter {
             </div>
             <div class="task-desc">${task.description}</div>
             <div class="task-meta">
-                <span>${assigneeName}</span>
+                <div class="task-assignee">
+                    ${avatarUrl ? `<img src="${avatarUrl}" class="task-avatar" alt="${agentName}">` : ''}
+                    <span>${agentName}</span>
+                </div>
                 <span>Due: ${new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </div>
         `;
@@ -197,8 +210,7 @@ class CommandCenter {
         });
 
         el.onclick = () => {
-            // Future: Show details modal
-            console.log('Task clicked', task);
+            this.openEditTaskModal(task);
         };
 
         return el;
@@ -267,6 +279,23 @@ class CommandCenter {
         this.closeAllModals();
     }
 
+    updateTask(formData) {
+        const taskId = formData.get('taskId');
+        const task = this.tasks.find(t => t.id === taskId);
+        if (task) {
+            task.title = formData.get('title');
+            task.description = formData.get('description');
+            task.assignee = formData.get('assignee');
+            task.priority = formData.get('priority');
+            task.dueDate = formData.get('dueDate');
+
+            this.logActivity('chuck', 'Updated Mission', task.title); // Assuming user (Chuck) edited it
+            this.saveState();
+            this.renderAll();
+            this.closeAllModals();
+        }
+    }
+
     updateTaskStatus(taskId, newStatus) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task && task.status !== newStatus) {
@@ -290,8 +319,12 @@ class CommandCenter {
         this.activityLog.push(activity);
     }
 
+    getAgent(id) {
+        return this.agents.find(a => a.id === id);
+    }
+
     getAgentName(id) {
-        const agent = this.agents.find(a => a.id === id);
+        const agent = this.getAgent(id);
         return agent ? agent.name : id;
     }
 
@@ -306,6 +339,20 @@ class CommandCenter {
 
     openTaskModal() {
         document.getElementById('task-modal').style.display = 'flex';
+    }
+
+    openEditTaskModal(task) {
+        const modal = document.getElementById('edit-task-modal');
+        const form = document.getElementById('edit-task-form');
+
+        form.taskId.value = task.id;
+        form.title.value = task.title;
+        form.description.value = task.description;
+        form.assignee.value = task.assignee;
+        form.priority.value = task.priority;
+        form.dueDate.value = task.dueDate;
+
+        modal.style.display = 'flex';
     }
 
     openActivityModal() {

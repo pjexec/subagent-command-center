@@ -139,6 +139,40 @@
         </div>
     </div>
 
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Mission</h3>
+            <form id="edit-task-form">
+                <input type="hidden" name="taskId">
+                <input type="text" name="title" placeholder="Mission Directive" required>
+                <textarea name="description" placeholder="Operational details..." required rows="4"></textarea>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <select name="assignee" required>
+                        <option value="">Select Operative</option>
+                        <!-- Options populated by JS -->
+                    </select>
+
+                    <select name="priority" required>
+                        <option value="low">Low Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">High Priority</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+
+                <input type="date" name="dueDate" required>
+
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <button type="button" onclick="window.commandCenter.closeAllModals()"
+                        class="button secondary">Cancel</button>
+                    <button type="submit" class="button">Update Mission</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/command-center.js"></script>
 </body>
 
