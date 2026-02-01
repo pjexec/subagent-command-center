@@ -5,6 +5,7 @@ class CommandCenter {
 
         // default state if storage is empty
         this.agents = [
+            { id: 'chuck', name: 'Chuck', role: 'CEO', status: 'online', avatar: 'img/chuck.jpeg' },
             { id: 'sam', name: 'Sam', role: 'Chief of Staff', status: 'active', avatar: 'img/samantha.png' },
             { id: 'jeff', name: 'Jeff', role: 'Market Intelligence', status: 'standby', avatar: 'img/jeff-avatar.png' },
             { id: 'barbara', name: 'Barbara', role: 'Writing Specialist', status: 'standby', avatar: 'img/barbara-avatar.png' }
