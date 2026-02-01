@@ -11,7 +11,29 @@
     --danger: #ef4444;
     --success: #22c55e;
     --warning: #eab308;
+    --urgent: #d946ef;
+    /* Fuchsia/Purple/Neon */
     --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ... existing code ... */
+
+.priority-urgent {
+    background: var(--urgent);
+    box-shadow: 0 0 5px var(--urgent);
+    /* Glow effect for urgent */
+}
+
+.priority-high {
+    background: var(--danger);
+}
+
+.priority-medium {
+    background: var(--warning);
+}
+
+.priority-low {
+    background: var(--success);
 }
 
 * {
