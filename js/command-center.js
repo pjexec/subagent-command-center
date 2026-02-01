@@ -1,9 +1,15 @@
-// Subagent Command Center - Enhanced & Persistent
+// Subagent Command Center - Enhanced with API
 class CommandCenter {
     constructor() {
         console.log('Command Center: Initializing...');
+        this.token = localStorage.getItem('cc_token');
+        this.username = localStorage.getItem('cc_user');
 
-        // default state if storage is empty
+        if (!this.token) {
+            window.location.href = '/login.html';
+        }
+
+        // Static agents for now
         this.agents = [
             { id: 'chuck', name: 'Chuck', role: 'CEO', status: 'online', avatar: 'img/chuck.jpeg' },
             { id: 'sam', name: 'Sam', role: 'Chief of Staff', status: 'active', avatar: 'img/samantha.png' },
@@ -14,39 +20,12 @@ class CommandCenter {
         this.tasks = [];
         this.activityLog = [];
 
-        this.loadState();
-
-        // If no tasks exist (first run), add defaults
-        if (this.tasks.length === 0) {
-            this.tasks = [
-                {
-                    id: 'task-1',
-                    title: 'Market Intelligence Scan',
-                    description: 'Comprehensive scan of email re-engagement tools and competitors',
-                    assignee: 'jeff',
-                    priority: 'high',
-                    status: 'assigned',
-                    dueDate: '2026-02-05'
-                },
-                {
-                    id: 'task-2',
-                    title: 'Content Creation',
-                    description: 'Write marketing copy for new feature announcement',
-                    assignee: 'barbara',
-                    priority: 'medium',
-                    status: 'backlog',
-                    dueDate: '2026-02-10'
-                }
-            ];
-            this.saveState();
-        }
-
         this.init();
     }
 
-    init() {
+    async init() {
         this.setupEventListeners();
-        this.renderAll();
+        await this.loadData();
         console.log('Command Center: Ready');
     }
 
@@ -82,6 +61,16 @@ class CommandCenter {
             });
         }
 
+        // Logout
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('cc_token');
+                localStorage.removeItem('cc_user');
+                window.location.href = '/login.html';
+            });
+        }
+
         // Drag and Drop
         const columns = document.querySelectorAll('.kanban-column');
         columns.forEach(col => {
@@ -104,21 +93,36 @@ class CommandCenter {
         });
     }
 
-    // --- State Management ---
+    // --- API Interactions ---
 
-    saveState() {
-        localStorage.setItem('cc_tasks', JSON.stringify(this.tasks));
-        localStorage.setItem('cc_activity', JSON.stringify(this.activityLog));
-        localStorage.setItem('cc_agents', JSON.stringify(this.agents)); // In case we add dynamic agents later
+    async apiCall(endpoint, method = 'GET', body = null) {
+        const headers = {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+        };
+
+        const options = { method, headers };
+        if (body) options.body = JSON.stringify(body);
+
+        try {
+            const res = await fetch(`/api${endpoint}`, options);
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('cc_token');
+                window.location.href = '/login.html';
+                return null;
+            }
+            if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+            return method !== 'DELETE' ? await res.json() : true;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
     }
 
-    loadState() {
-        const storedTasks = localStorage.getItem('cc_tasks');
-        const storedActivity = localStorage.getItem('cc_activity');
-        // We generally stick to hardcoded agents for now, but could load them too
-
-        if (storedTasks) this.tasks = JSON.parse(storedTasks);
-        if (storedActivity) this.activityLog = JSON.parse(storedActivity);
+    async loadData() {
+        this.tasks = await this.apiCall('/tasks') || [];
+        this.activityLog = await this.apiCall('/activity') || [];
+        this.renderAll();
     }
 
     // --- Rendering ---
@@ -147,7 +151,6 @@ class CommandCenter {
     }
 
     renderTasks() {
-        // Clear all lists
         ['backlog', 'assigned', 'active', 'complete'].forEach(status => {
             const list = document.getElementById(`list-${status}`);
             const count = document.querySelector(`#col-${status} .count`);
@@ -155,7 +158,6 @@ class CommandCenter {
             if (count) count.innerText = '0';
         });
 
-        // Render tasks
         this.tasks.forEach(task => {
             const list = document.getElementById(`list-${task.status}`);
             if (list) {
@@ -164,7 +166,6 @@ class CommandCenter {
             }
         });
 
-        // Update counts
         ['backlog', 'assigned', 'active', 'complete'].forEach(status => {
             const count = document.querySelector(`#col-${status} .count`);
             const num = this.tasks.filter(t => t.status === status).length;
@@ -184,6 +185,17 @@ class CommandCenter {
         const avatarUrl = agent ? agent.avatar : '';
         const agentName = agent ? agent.name : task.assignee;
 
+        // Handle date string cleanup
+        let dateDisplay = 'No Date';
+        if (task.due_date) {
+            const date = new Date(task.due_date);
+            dateDisplay = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } else if (task.dueDate) {
+            // Fallback for legacy local data if mixed
+            const [y, m, d] = task.dueDate.split('-');
+            dateDisplay = new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
         el.innerHTML = `
             <div class="task-title">
                 <span class="task-priority ${priorityColor}"></span>
@@ -195,10 +207,7 @@ class CommandCenter {
                     ${avatarUrl ? `<img src="${avatarUrl}" class="task-avatar" alt="${agentName}">` : ''}
                     <span>${agentName}</span>
                 </div>
-                <span>Due: ${(() => {
-                const [y, m, d] = task.dueDate.split('-');
-                return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            })()}</span>
+                <span>Due: ${dateDisplay}</span>
             </div>
         `;
 
@@ -223,22 +232,25 @@ class CommandCenter {
         const log = document.getElementById('activity-log');
         if (!log) return;
 
-        const recent = [...this.activityLog].reverse().slice(0, 20); // Last 20, newest first
-        log.innerHTML = recent.map(activity => `
+        const recent = this.activityLog;
+        log.innerHTML = recent.map(activity => {
+            const date = new Date(activity.timestamp);
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
             <div class="activity-item">
-                <div class="activity-time">${activity.timestamp}</div>
+                <div class="activity-time">${timeStr}</div>
                 <div class="activity-content">
-                    <strong>${this.getAgentName(activity.agent)}:</strong> ${activity.action}
+                    <strong>${this.getAgentName(activity.agent_id || activity.agent)}:</strong> ${activity.action}
                     ${activity.details ? `<br><span style="color: #888;">${activity.details}</span>` : ''}
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     populateDropdowns() {
         const selects = document.querySelectorAll('select[name="assignee"], select[name="agent"]');
         selects.forEach(select => {
-            // Keep first option
             const first = select.firstElementChild;
             select.innerHTML = '';
             select.appendChild(first);
@@ -254,94 +266,97 @@ class CommandCenter {
 
     // --- Actions ---
 
-    createTask(formData) {
-        const task = {
-            id: 'task-' + Date.now(),
+    async createTask(formData) {
+        const taskData = {
             title: formData.get('title'),
             description: formData.get('description'),
             assignee: formData.get('assignee'),
             priority: formData.get('priority'),
-            dueDate: formData.get('dueDate'),
+            due_date: formData.get('dueDate'),
             status: 'backlog'
         };
 
-        this.tasks.push(task);
-        this.logActivity(task.assignee, 'New Mission Assigned', task.title);
-        this.saveState();
-        this.renderAll();
+        await this.apiCall('/tasks', 'POST', taskData);
+        await this.loadData(); // Reload to get ID and consistent state
         this.closeAllModals();
     }
 
-    createActivity(formData) {
-        const agentId = formData.get('agent');
-        const desc = formData.get('description');
+    async createActivity(formData) {
+        const activityData = {
+            agent_id: formData.get('agent'),
+            action: 'Report',
+            details: formData.get('description')
+        };
 
-        this.logActivity(agentId, 'Report', desc);
-        this.saveState();
-        this.renderActivityLog();
+        await this.apiCall('/activity', 'POST', activityData);
+        await this.loadData();
         this.closeAllModals();
     }
 
-    updateTask(formData) {
+    async updateTask(formData) {
         const taskId = formData.get('taskId');
-        const task = this.tasks.find(t => t.id === taskId);
-        if (task) {
-            task.title = formData.get('title');
-            task.description = formData.get('description');
-            task.assignee = formData.get('assignee');
-            task.priority = formData.get('priority');
-            task.dueDate = formData.get('dueDate');
+        const taskData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            assignee: formData.get('assignee'),
+            priority: formData.get('priority'),
+            due_date: formData.get('dueDate'),
+            status: 'backlog' // Default, status update is separate usually, but let's keep it safe
+        };
 
-            this.logActivity('chuck', 'Updated Mission', task.title); // Assuming user (Chuck) edited it
-            this.saveState();
-            this.renderAll();
-            this.closeAllModals();
-        }
+        // Find existing status to preserve it
+        const existing = this.tasks.find(t => t.id == taskId);
+        if (existing) taskData.status = existing.status;
+
+        await this.apiCall(`/tasks/${taskId}`, 'PUT', taskData);
+        await this.loadData();
+        this.closeAllModals();
     }
 
     deleteTask() {
-        // Just open the confirmation modal
         const deleteModal = document.getElementById('delete-confirmation-modal');
         if (deleteModal) {
             deleteModal.style.display = 'flex';
         }
     }
 
-    confirmTaskDeletion() {
+    async confirmTaskDeletion() {
         const form = document.getElementById('edit-task-form');
         const taskId = form.taskId.value;
-        const task = this.tasks.find(t => t.id === taskId);
 
-        if (task) {
-            this.tasks = this.tasks.filter(t => t.id !== taskId);
-            this.logActivity('chuck', 'Terminated Mission', task.title);
-            this.saveState();
-            this.renderAll();
+        if (taskId) {
+            const existing = this.tasks.find(t => t.id == taskId);
+            // Log deletion before deleting if needed, or backend handles it? 
+            // We'll log manually via API for now
+            if (existing) {
+                await this.apiCall('/activity', 'POST', {
+                    agent_id: this.username || 'user',
+                    action: 'Terminated Mission',
+                    details: existing.title
+                });
+            }
+
+            await this.apiCall(`/tasks/${taskId}`, 'DELETE');
+            await this.loadData();
             this.closeAllModals();
         }
     }
 
-    updateTaskStatus(taskId, newStatus) {
-        const task = this.tasks.find(t => t.id === taskId);
+    async updateTaskStatus(taskId, newStatus) {
+        const task = this.tasks.find(t => t.id == taskId);
         if (task && task.status !== newStatus) {
-            const oldStatus = task.status;
-            task.status = newStatus;
-            this.logActivity(task.assignee, `Moved mission to ${newStatus}`, task.title);
-            this.saveState();
-            this.renderTasks();
-            this.renderActivityLog(); // to show the move
-        }
-    }
+            task.status = newStatus; // Optimistic update
+            await this.apiCall(`/tasks/${taskId}`, 'PUT', { ...task, due_date: task.due_date });
 
-    logActivity(agentId, action, details = null) {
-        const activity = {
-            id: Date.now(),
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            agent: agentId,
-            action,
-            details
-        };
-        this.activityLog.push(activity);
+            // Log move
+            await this.apiCall('/activity', 'POST', {
+                agent_id: this.username || 'user',
+                action: `Moved mission to ${newStatus}`,
+                details: task.title
+            });
+
+            await this.loadData();
+        }
     }
 
     getAgent(id) {
@@ -353,13 +368,9 @@ class CommandCenter {
         return agent ? agent.name : id;
     }
 
-    // --- UI Helpers ---
-
     togglePin(elementId) {
         const el = document.getElementById(elementId);
-        if (el) {
-            el.classList.toggle('pinned');
-        }
+        if (el) el.classList.toggle('pinned');
     }
 
     openTaskModal() {
@@ -375,7 +386,13 @@ class CommandCenter {
         form.description.value = task.description;
         form.assignee.value = task.assignee;
         form.priority.value = task.priority;
-        form.dueDate.value = task.dueDate;
+
+        // Date formatting for input
+        if (task.due_date) {
+            form.dueDate.value = new Date(task.due_date).toISOString().split('T')[0];
+        } else {
+            form.dueDate.value = task.dueDate || '';
+        }
 
         modal.style.display = 'flex';
     }
@@ -390,9 +407,7 @@ class CommandCenter {
     }
 }
 
-// Global accessor
 window.commandCenter = null;
-
 document.addEventListener('DOMContentLoaded', () => {
     window.commandCenter = new CommandCenter();
 });

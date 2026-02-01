@@ -12,6 +12,11 @@
 </head>
 
 <body>
+    <script>
+        if (!localStorage.getItem('cc_token')) {
+            window.location.href = '/login.html';
+        }
+    </script>
     <div class="container">
         <!-- Sidebar - Agents -->
         <div class="sidebar drawer" id="left-drawer">
@@ -36,6 +41,7 @@
             <div class="header">
                 <h2>Subagent Command Center</h2>
                 <div style="display: flex; gap: 10px;">
+                    <button class="button secondary" id="logout-btn" style="width: auto;">Logout</button>
                     <button class="button" onclick="window.commandCenter.openTaskModal()" style="width: auto;">+ New
                         Mission</button>
                 </div>
