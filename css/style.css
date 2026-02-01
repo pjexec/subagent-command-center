@@ -214,14 +214,20 @@ body {
 /* Main Board */
 .main {
     flex: 1;
-    padding: 24px 40px;
-    /* More padding since full width */
+    padding: 32px 40px;
     overflow-x: auto;
     background: var(--bg-dark);
     width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 8px;
 }
 
 .kanban-board {
+    flex: 1;
     display: flex;
     gap: 24px;
     height: calc(100vh - 100px);
@@ -367,19 +373,24 @@ body {
     background: var(--accent);
     color: white;
     border: none;
-    padding: 8px 14px;
-    /* Reduced from 10px 16px */
-    border-radius: 6px;
+    padding: 6px 12px;
+    /* Small and compact */
+    border-radius: 5px;
     cursor: pointer;
     font-weight: 500;
-    font-size: 13px;
-    /* Kept or slightly smaller if needed */
-    transition: background 0.2s;
-    width: 100%;
+    font-size: 12px;
+    /* Smaller font */
+    transition: background 0.2s, transform 0.1s;
+    width: auto;
+    /* Allow auto width based on content */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    margin-top: 8px;
+    /* Visual separation from title */
+    margin-bottom: 8px;
+    /* Visual separation from board */
 }
 
 .button:hover {
