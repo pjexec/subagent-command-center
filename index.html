@@ -162,10 +162,14 @@
 
                 <input type="date" name="dueDate" required>
 
-                <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button type="button" onclick="window.commandCenter.closeAllModals()"
-                        class="button secondary">Cancel</button>
-                    <button type="submit" class="button">Update Mission</button>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                    <button type="button" onclick="window.commandCenter.deleteTask()" class="button danger">Delete
+                        Mission</button>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" onclick="window.commandCenter.closeAllModals()"
+                            class="button secondary">Cancel</button>
+                        <button type="submit" class="button">Update Mission</button>
+                    </div>
                 </div>
             </form>
         </div>

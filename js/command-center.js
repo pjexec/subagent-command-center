@@ -299,6 +299,20 @@ class CommandCenter {
         }
     }
 
+    deleteTask() {
+        const form = document.getElementById('edit-task-form');
+        const taskId = form.taskId.value;
+        const task = this.tasks.find(t => t.id === taskId);
+
+        if (confirm(`Are you sure you want to delete mission "${task.title}"? This cannot be undone.`)) {
+            this.tasks = this.tasks.filter(t => t.id !== taskId);
+            this.logActivity('chuck', 'Terminated Mission', task.title);
+            this.saveState();
+            this.renderAll();
+            this.closeAllModals();
+        }
+    }
+
     updateTaskStatus(taskId, newStatus) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task && task.status !== newStatus) {
