@@ -189,7 +189,7 @@ class CommandCenter {
         let dateDisplay = 'No Date';
         if (task.due_date) {
             const date = new Date(task.due_date);
-            dateDisplay = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            dateDisplay = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
         } else if (task.dueDate) {
             // Fallback for legacy local data if mixed
             const [y, m, d] = task.dueDate.split('-');
