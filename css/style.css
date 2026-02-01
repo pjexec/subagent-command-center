@@ -461,6 +461,8 @@ textarea {
     color: white;
     font-family: inherit;
     font-size: 14px;
+    color-scheme: dark;
+    /* Ensures calendar picker is visible in dark mode */
 }
 
 input:focus,
