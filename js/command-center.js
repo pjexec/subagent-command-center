@@ -195,7 +195,10 @@ class CommandCenter {
                     ${avatarUrl ? `<img src="${avatarUrl}" class="task-avatar" alt="${agentName}">` : ''}
                     <span>${agentName}</span>
                 </div>
-                <span>Due: ${new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                <span>Due: ${(() => {
+                const [y, m, d] = task.dueDate.split('-');
+                return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            })()}</span>
             </div>
         `;
 
