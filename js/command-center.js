@@ -177,9 +177,8 @@ class CommandCenter {
         el.className = 'task-card';
         el.draggable = true;
 
-        const priorityColor = task.priority === 'urgent' ? 'priority-urgent' :
-            task.priority === 'high' ? 'priority-high' :
-                task.priority === 'medium' ? 'priority-medium' : 'priority-low';
+        const priorityColor = (task.priority === 'urgent' || task.priority === 'high') ? 'priority-high' :
+            task.priority === 'medium' ? 'priority-medium' : 'priority-low';
 
         const agent = this.getAgent(task.assignee);
         const avatarUrl = agent ? agent.avatar : '';
