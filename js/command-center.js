@@ -300,11 +300,19 @@ class CommandCenter {
     }
 
     deleteTask() {
+        // Just open the confirmation modal
+        const deleteModal = document.getElementById('delete-confirmation-modal');
+        if (deleteModal) {
+            deleteModal.style.display = 'flex';
+        }
+    }
+
+    confirmTaskDeletion() {
         const form = document.getElementById('edit-task-form');
         const taskId = form.taskId.value;
         const task = this.tasks.find(t => t.id === taskId);
 
-        if (confirm(`Are you sure you want to delete mission "${task.title}"? This cannot be undone.`)) {
+        if (task) {
             this.tasks = this.tasks.filter(t => t.id !== taskId);
             this.logActivity('chuck', 'Terminated Mission', task.title);
             this.saveState();
