@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subagent Command Center</title>
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <!-- Sidebar - Agents -->
-        <div class="sidebar">
-            <h3>Active Agents</h3>
-            
+        <div class="sidebar drawer" id="left-drawer">
+            <h3>
+                Active Agents
+                <button class="pin-btn" onclick="window.commandCenter.togglePin('left-drawer')"
+                    title="Pin Sidebar">📌</button>
+            </h3>
+
             <div id="agents-list">
                 <!-- Agents rendered by JS -->
             </div>
-            
+
             <div style="margin-top: auto;">
-                <button class="button secondary" onclick="window.commandCenter.openActivityModal()">Log Activity</button>
+                <button class="button secondary" onclick="window.commandCenter.openActivityModal()">Log
+                    Activity</button>
             </div>
         </div>
-        
+
         <!-- Main - Kanban Board -->
         <div class="main">
             <div class="header">
                 <h2>Mission Control</h2>
                 <div style="display: flex; gap: 10px;">
-                    <button class="button" onclick="window.commandCenter.openTaskModal()" style="width: auto;">+ New Mission</button>
+                    <button class="button" onclick="window.commandCenter.openTaskModal()" style="width: auto;">+ New
+                        Mission</button>
                 </div>
             </div>
-            
+
             <div class="kanban-board">
                 <div class="kanban-column" id="col-backlog" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <h4>
@@ -39,7 +49,7 @@
                     </h4>
                     <div class="task-list" id="list-backlog"></div>
                 </div>
-                
+
                 <div class="kanban-column" id="col-assigned" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <h4>
                         Assigned
@@ -47,7 +57,7 @@
                     </h4>
                     <div class="task-list" id="list-assigned"></div>
                 </div>
-                
+
                 <div class="kanban-column" id="col-active" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <h4>
                         Active
@@ -55,7 +65,7 @@
                     </h4>
                     <div class="task-list" id="list-active"></div>
                 </div>
-                
+
                 <div class="kanban-column" id="col-complete" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <h4>
                         Complete
@@ -65,14 +75,18 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Right Panel - Activity Log -->
-        <div class="right-panel">
-            <h3>Activity Log</h3>
+        <div class="right-panel drawer" id="right-drawer">
+            <h3>
+                Activity Log
+                <button class="pin-btn" onclick="window.commandCenter.togglePin('right-drawer')"
+                    title="Pin Panel">📌</button>
+            </h3>
             <div id="activity-log"></div>
         </div>
     </div>
-    
+
     <!-- Modals -->
     <div id="task-modal" class="modal">
         <div class="modal-content">
@@ -80,13 +94,13 @@
             <form id="task-form">
                 <input type="text" name="title" placeholder="Mission Directive" required>
                 <textarea name="description" placeholder="Operational details..." required rows="4"></textarea>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <select name="assignee" required>
                         <option value="">Select Operative</option>
                         <!-- Options populated by JS -->
                     </select>
-                    
+
                     <select name="priority" required>
                         <option value="low">Low Priority</option>
                         <option value="medium" selected>Medium Priority</option>
@@ -94,17 +108,18 @@
                         <option value="urgent">Urgent</option>
                     </select>
                 </div>
-                
+
                 <input type="date" name="dueDate" required>
-                
+
                 <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button type="button" onclick="window.commandCenter.closeAllModals()" class="button secondary">Cancel</button>
+                    <button type="button" onclick="window.commandCenter.closeAllModals()"
+                        class="button secondary">Cancel</button>
                     <button type="submit" class="button">Initialize</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <div id="activity-modal" class="modal">
         <div class="modal-content">
             <h3>Log Activity</h3>
@@ -114,15 +129,17 @@
                     <!-- Options populated by JS -->
                 </select>
                 <textarea name="description" placeholder="Activity report..." required rows="4"></textarea>
-                
+
                 <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button type="button" onclick="window.commandCenter.closeAllModals()" class="button secondary">Cancel</button>
+                    <button type="button" onclick="window.commandCenter.closeAllModals()"
+                        class="button secondary">Cancel</button>
                     <button type="submit" class="button">Log Entry</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <script src="js/command-center.js"></script>
 </body>
+
 </html>

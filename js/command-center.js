@@ -296,6 +296,13 @@ class CommandCenter {
 
     // --- UI Helpers ---
 
+    togglePin(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) {
+            el.classList.toggle('pinned');
+        }
+    }
+
     openTaskModal() {
         document.getElementById('task-modal').style.display = 'flex';
     }
